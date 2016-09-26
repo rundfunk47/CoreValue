@@ -577,7 +577,7 @@ public extension BoxingPersistentStruct {
             try ctx.save()
             
         } catch let error {
-            let _ = CVManagedStructError.structDeleteError(message: "Could not locate object \(oid) in context \(context): \(error)")
+            throw CVManagedStructError.structDeleteError(message: "Could not locate object \(oid) in context \(context): \(error)")
         }
         
         return true
