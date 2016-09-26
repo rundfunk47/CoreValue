@@ -13,7 +13,7 @@
 - iOS and Mac OS X support
 - Use with `structs`
 - Works fine with `let` and `var` based properties
-- Swift 2.2
+- Swift 3.0
 
 ##Rationale
 
