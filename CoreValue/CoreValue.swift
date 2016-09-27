@@ -24,51 +24,28 @@ internal extension NSError {
 Unboxing NSManagedObjects into Value types.
 
 - Unboxing can fail, so the unboxed value is an either type that explains the error via TypeMismatch
-- Unboxing cannot utilize the Swift or the NSManagedObject reflection mechanisms as both are too
-  dynamic for Swift's typechecker. So we utilize custom operators and curried object construction
-  like in Argo (https://github.com/thoughtbot/Argo) which is also where the gists for the unboxing
-  code originates from.
 - Unboxing defines the 'Unboxing' protocol which a type has to conform to in order to be able
   to be unboxed
 */
 
-precedencegroup MonadicOperator {
-    associativity: left
-}
-
-precedencegroup PullOperator {
-    higherThan: MonadicOperator
-    associativity: left
-}
-
-// monadic operators
-infix operator <^> : MonadicOperator
-
-// pull value/s from nsmanagedobject
-infix operator <| : PullOperator
-infix operator <|| : PullOperator
-infix operator <|? : PullOperator
-
-public func <^> <A, B>(f: ((A) throws -> B), a: A) rethrows -> B {
-    return try f(a)
-}
-
-public func <| <A>(value: NSManagedObject, key: String) throws -> A where A: Unboxing, A == A.StructureType {
-    if let s = value.value(forKey: key) {
-        return try A.unbox(s as AnyObject)
-    }
-    throw NSError(unboxErrorMessage: "\(key) \(A.self)")
-}
-
-public func <|? <A>(value: NSManagedObject, key: String) -> A? where A: Unboxing, A == A.StructureType {
-    return try? value <| key
-}
-
-public func <|| <A>(value: NSManagedObject, key: String) throws -> [A] where A: Unboxing, A == A.StructureType {
-    if let s = value.value(forKey: key) {
-        return try Array<A>.unbox(s as AnyObject)
-    } else {
+extension NSManagedObject {
+    func unbox<A>(_ key: String) throws -> A where A: Unboxing, A == A.StructureType {
+        if let s = self.value(forKey: key) {
+            return try A.unbox(s as AnyObject)
+        }
         throw NSError(unboxErrorMessage: "\(key) \(A.self)")
+    }
+    
+    func unbox<A>(_ key: String) throws -> A? where A: Unboxing, A == A.StructureType {
+        return try? self.unbox(key)
+    }
+    
+    func unbox<A>(_ key: String) throws -> [A] where A: Unboxing, A == A.StructureType {
+        if let s = self.value(forKey: key) {
+            return try Array<A>.unbox(s as AnyObject)
+        } else {
+            throw NSError(unboxErrorMessage: "\(key) \(A.self)")
+        }
     }
 }
 
@@ -201,14 +178,14 @@ public protocol UnboxingStruct : Unboxing {
     
     - parameter object: The NSManagedObject that should be converted to an instance of self
     */
-    static func fromObject(_ object: NSManagedObject) throws -> Self
+    init(fromObject object: NSManagedObject) throws
 }
 
 extension UnboxingStruct {
     public static func unbox<A: UnboxingStruct>(_ value: AnyObject) throws -> A where A == A.StructureType {
         switch value {
             case let object as NSManagedObject:
-                return try A.fromObject(object)
+                return try A(fromObject: object)
         default:
             throw NSError(unboxErrorMessage: "\(value) is not NSManagedObject")
         }
@@ -274,7 +251,7 @@ extension BoxingStruct {
             
             let fetchResults = try context.fetch(fetchRequest)
             return try fetchResults.map { obj in
-                try T.fromObject(obj)
+                try T(fromObject: obj)
             }
     }
 

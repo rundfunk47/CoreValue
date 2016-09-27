@@ -20,14 +20,22 @@ struct StoredEmployee : CVManagedPersistentStruct {
     let department: String
     let job: String
 
-    static func fromObject(_ o: NSManagedObject) throws -> StoredEmployee {
-        return try curry(self.init)
-            <^> o <|? "objectID"
-            <^> o <| "name"
-            <^> o <| "age"
-            <^> o <|? "position"
-            <^> o <| "department"
-            <^> o <| "job"
+    init(fromObject object: NSManagedObject) throws {
+        objectID = try object.unbox("objectID")
+        name = try object.unbox("name")
+        age = try object.unbox("age")
+        position = try object.unbox("position")
+        department = try object.unbox("department")
+        job = try object.unbox("job")
+    }
+    
+    init(objectID: NSManagedObjectID?, name: String, age: Int16, position: String?, department: String, job: String) {
+        self.objectID = objectID
+        self.name = name
+        self.age = age
+        self.position = position
+        self.department = department
+        self.job = job
     }
 }
 
@@ -38,18 +46,25 @@ struct StoredCompany: CVManagedPersistentStruct {
     var name: String
     var employees: Array<StoredEmployee>
 
-    static func fromObject(_ o: NSManagedObject) throws -> StoredCompany {
-        return try curry(self.init)
-            <^> o <|? "objectID"
-            <^> o <| "name"
-            <^> o <|| "employees"
+    init(fromObject object: NSManagedObject) throws {
+        self.objectID = try object.unbox("objectID")
+        self.name = try object.unbox("name")
+        self.employees = try object.unbox("employees")
     }
-
+    
+    init(objectID: NSManagedObjectID?, name: String, employees: Array<StoredEmployee>) {
+        self.objectID = objectID
+        self.name = name
+        self.employees = employees
+    }
+    
     mutating func save(_ context: NSManagedObjectContext) throws {
         try employees.saveAll(context)
 
         try defaultSave(context)
     }
+    
+    
 }
 
 

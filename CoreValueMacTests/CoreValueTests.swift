@@ -10,7 +10,6 @@ import XCTest
 import CoreData
 
 struct Employee : CVManagedStruct {
-    
     static let EntityName = "Employee"
     
     let name: String
@@ -19,18 +18,24 @@ struct Employee : CVManagedStruct {
     let department: String
     let job: String
     
-    static func fromObject(_ o: NSManagedObject) throws -> Employee {
-        return try curry(self.init)
-            <^> o <| "name"
-            <^> o <| "age"
-            <^> o <|? "position"
-            <^> o <| "department"
-            <^> o <| "job"
+    init(fromObject object: NSManagedObject) throws {
+        name = try object.unbox("name")
+        age = try object.unbox("age")
+        position = try object.unbox("position")
+        department = try object.unbox("department")
+        job = try object.unbox("job")
+    }
+    
+    init(name: String, age: Int16, position: String?, department: String, job: String) {
+        self.name = name
+        self.age = age
+        self.position = position
+        self.department = department
+        self.job = job
     }
 }
 
 struct StoredShopEmployee : CVManagedPersistentStruct {
-    
     static let EntityName = "Employee"
     
     var objectID: NSManagedObjectID?
@@ -41,15 +46,24 @@ struct StoredShopEmployee : CVManagedPersistentStruct {
     let job: String
     let shop: StoredShop?
     
-    static func fromObject(_ o: NSManagedObject) throws -> StoredShopEmployee {
-        return try curry(self.init)
-            <^> o <|? "objectID"
-            <^> o <| "name"
-            <^> o <| "age"
-            <^> o <|? "position"
-            <^> o <| "department"
-            <^> o <| "job"
-            <^> o <|? "shop"
+    init(fromObject object: NSManagedObject) throws {
+        objectID = try object.unbox("objectID")
+        name = try object.unbox("name")
+        age = try object.unbox("age")
+        position = try object.unbox("position")
+        department = try object.unbox("department")
+        job = try object.unbox("job")
+        shop = try object.unbox("shop")
+    }
+    
+    init(objectID: NSManagedObjectID?, name: String, age: Int16, position: String?, department: String, job: String, shop: StoredShop?) {
+        self.objectID = objectID
+        self.name = name
+        self.age = age
+        self.position = position
+        self.department = department
+        self.job = job
+        self.shop = shop
     }
 }
 
@@ -59,10 +73,14 @@ struct Shop: CVManagedStruct {
     var name: String
     var owner: Employee
     
-    static func fromObject(_ o: NSManagedObject) throws -> Shop {
-        return try curry(self.init)
-            <^> o <| "name"
-            <^> o <| "owner"
+    init(fromObject object: NSManagedObject) throws {
+        name = try object.unbox("name")
+        owner = try object.unbox("owner")
+    }
+    
+    init(name: String, owner: Employee) {
+        self.name = name
+        self.owner = owner
     }
 }
 
@@ -72,10 +90,14 @@ struct Company: CVManagedStruct {
     var name: String
     var employees: Array<Employee>
     
-    static func fromObject(_ o: NSManagedObject) throws -> Company {
-        return try curry(self.init)
-        <^> o <| "name"
-        <^> o <|| "employees"
+    init(fromObject object: NSManagedObject) throws {
+        name = try object.unbox("name")
+        employees = try object.unbox("employees")
+    }
+    
+    init(name: String, employees: Array<Employee>) {
+        self.name = name
+        self.employees = employees
     }
 }
 
@@ -89,14 +111,22 @@ struct Other: CVManagedStruct {
     var double: Double
     var float: Float
     
-    static func fromObject(_ o: NSManagedObject) throws -> Other {
-        return try curry(self.init)
-        <^> o <| "boolean"
-        <^> o <| "data"
-        <^> o <| "date"
-        <^> o <| "decimal"
-        <^> o <| "double"
-        <^> o <| "float"
+    init(fromObject object: NSManagedObject) throws {
+        boolean = try object.unbox("boolean")
+        data = try object.unbox("name")
+        date = try object.unbox("date")
+        decimal = try object.unbox("decimal")
+        double = try object.unbox("double")
+        float = try object.unbox("float")
+    }
+    
+    init(boolean: Bool, data: Data, date: Date, decimal: NSDecimalNumber, double: Double, float: Float) {
+        self.boolean = boolean
+        self.data = data
+        self.date = date
+        self.decimal = decimal
+        self.double = double
+        self.float = float
     }
 }
 
@@ -107,11 +137,16 @@ struct StoredShop: CVManagedPersistentStruct {
     var name: String
     var owner: Employee
     
-    static func fromObject(_ o: NSManagedObject) throws -> StoredShop {
-        return try curry(self.init)
-            <^> o <|? "objectID"
-            <^> o <| "name"
-            <^> o <| "owner"
+    init(fromObject object: NSManagedObject) throws {
+        objectID = try object.unbox("objectID")
+        name = try object.unbox("name")
+        owner = try object.unbox("owner")
+    }
+    
+    init(objectID: NSManagedObjectID?, name: String, owner: Employee) {
+        self.objectID = objectID
+        self.name = name
+        self.owner = owner
     }
 }
 
@@ -122,11 +157,16 @@ struct StoredEmployeeShop: CVManagedPersistentStruct {
     var name: String
     var employees: [StoredShopEmployee]
     
-    static func fromObject(_ o: NSManagedObject) throws -> StoredEmployeeShop {
-        return try curry(self.init)
-            <^> o <|? "objectID"
-            <^> o <| "name"
-            <^> o <|| "employees"
+    init(fromObject object: NSManagedObject) throws {
+        objectID = try object.unbox("objectID")
+        name = try object.unbox("name")
+        employees = try object.unbox("employees")
+    }
+    
+    init(objectID: NSManagedObjectID?, name: String, employees: [StoredShopEmployee]) {
+        self.objectID = objectID
+        self.name = name
+        self.employees = employees
     }
 }
 
@@ -144,11 +184,16 @@ struct Car: CVManagedPersistentStruct {
     var name: String
     var type: CarType
     
-    static func fromObject(_ o: NSManagedObject) throws -> Car {
-        return try curry(self.init)
-            <^> o <|? "objectID"
-            <^> o <| "name"
-            <^> o <| "type"
+    init(fromObject object: NSManagedObject) throws {
+        objectID = try object.unbox("objectID")
+        name = try object.unbox("name")
+        type = try object.unbox("type")
+    }
+    
+    init(objectID: NSManagedObjectID?, name: String, type: CarType) {
+        self.objectID = objectID
+        self.name = name
+        self.type = type
     }
 }
 
@@ -313,7 +358,7 @@ class CoreValueMacTests: XCTestCase {
     
     func testFromCoreDataNonNil() {
         testTry {
-            let t = try Employee.fromObject(self.nsEmployee1)
+            let t = try Employee(fromObject: self.nsEmployee1)
             if t.name != self.employee1.name ||
                 t.age != self.employee1.age {
                     XCTAssert(false, "Conversion Error")
@@ -323,7 +368,7 @@ class CoreValueMacTests: XCTestCase {
     
     func testFromCoreDataNil() {
         testTry {
-            let t = try Employee.fromObject(self.nsEmployee2)
+            let t = try Employee(fromObject: self.nsEmployee2)
             if t.name != self.employee2.name ||
                 t.age != self.employee2.age ||
                 t.position != nil {
@@ -354,7 +399,7 @@ class CoreValueMacTests: XCTestCase {
     
     func testFromCoreDataSub() {
         testTry {
-            let t = try Shop.fromObject(self.nsShop)
+            let t = try Shop(fromObject: self.nsShop)
             if t.name != self.shop.name ||
                 t.owner.name != self.shop.owner.name {
                     XCTAssert(false, "Conversion Error")
@@ -392,7 +437,7 @@ class CoreValueMacTests: XCTestCase {
     
     func testFromCoreDataSubArray() {
         testTry {
-            let t = try Company.fromObject(self.nsCompany)
+            let t = try Company(fromObject: self.nsCompany)
             if t.name != self.company.name ||
                 t.employees[0].name != self.company.employees[0].name {
                     XCTAssert(false, "Conversion Error")
@@ -635,7 +680,7 @@ class CoreValuePerformanceTests: XCTestCase {
             self.measure {
                 testTry {
                     let entities = try results.map {
-                        try Company.fromObject($0)
+                        try Company(fromObject: $0)
                     }
 
                     XCTAssert(entities.count == results.count, "Boxed Companies have to have the same amount of entities.")
