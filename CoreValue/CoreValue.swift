@@ -29,18 +29,18 @@ Unboxing NSManagedObjects into Value types.
 */
 
 extension NSManagedObject {
-    func unbox<A>(_ key: String) throws -> A where A: Unboxing, A == A.StructureType {
+    public func unbox<A>(_ key: String) throws -> A where A: Unboxing, A == A.StructureType {
         if let s = self.value(forKey: key) {
             return try A.unbox(s as AnyObject)
         }
         throw NSError(unboxErrorMessage: "\(key) \(A.self)")
     }
     
-    func unbox<A>(_ key: String) throws -> A? where A: Unboxing, A == A.StructureType {
+    public func unbox<A>(_ key: String) throws -> A? where A: Unboxing, A == A.StructureType {
         return try? self.unbox(key)
     }
     
-    func unbox<A>(_ key: String) throws -> [A] where A: Unboxing, A == A.StructureType {
+    public func unbox<A>(_ key: String) throws -> [A] where A: Unboxing, A == A.StructureType {
         if let s = self.value(forKey: key) {
             return try Array<A>.unbox(s as AnyObject)
         } else {
