@@ -37,7 +37,12 @@ extension NSManagedObject {
     }
     
     public func unbox<A>(_ key: String) throws -> A? where A: Unboxing, A == A.StructureType {
-        return try? self.unbox(key)
+        do {
+            let value = try self.unbox(key) as A
+            return value
+        } catch {
+            return nil
+        }
     }
     
     public func unbox<A>(_ key: String) throws -> [A] where A: Unboxing, A == A.StructureType {
